@@ -141,8 +141,8 @@ io.on("connection", (socket) => {
   // chit chat time
   socket.on(ACTIONS.SEND_MESSAGE, async ({ roomId, message, username, time }) => {
     try {
-      const Message = require("./models/Message");
-      const newMessage = new Message({ roomId, username, message, time });
+      const RoomMessage = require("./models/RoomMessage");
+      const newMessage = new RoomMessage({ roomId, username, message, time });
       await newMessage.save();
       io.to(roomId).emit(ACTIONS.RECEIVE_MESSAGE, { username, message, time });
     } catch (err) {
