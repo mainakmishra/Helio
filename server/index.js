@@ -41,15 +41,17 @@ const languageConfig = {
 };
 
 // Enable CORS
-app.use(cors());
+app.use(cors({
+  origin: '*', // Allow all for local dev
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true
+}));
 
 // Parse JSON bodies
 app.use(express.json());
 
 // Routes
 // road map here mainak
-app.use("/api/auth", authRoutes);
-app.use("/api/auth", authRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/chat", require("./routes/chatRoutes"));
@@ -67,7 +69,7 @@ app.get('/api/health', (req, res) => {
 
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
@@ -76,7 +78,7 @@ const io = new Server(server, {
 const userSocketMap = {};
 const onlineUsers = new Map(); // reverse map for speedy check... deepak smart
 
-// keep simple for mainak brain
+// keep simple for mainak
 // global map for app... separate from room
 const globalOnlineUsers = new Map(); // user -> socket
 app.set('onlineUsers', globalOnlineUsers); // show to controller
