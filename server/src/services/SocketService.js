@@ -56,7 +56,7 @@ class SocketService {
         clients.forEach(({ socketId }) => {
             this.io.to(socketId).emit(ACTIONS.JOINED, {
                 clients,
-                username,
+                joinedUsername: username,
                 socketId: socket.id,
             });
         });
