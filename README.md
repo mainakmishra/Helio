@@ -77,7 +77,7 @@ graph TD
 
         subgraph Services [Business Logic]
             RoomSrv[Room Service]
-            ExecSrv[Run Controller (Axios)]
+            ExecSrv["Run Controller (Axios)"]
         end
     end
 
@@ -205,4 +205,3 @@ Open `http://localhost:3000` to start coding!
 
 ---
 
-*Built with ❤️ by Deepak & Mainak*
