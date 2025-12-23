@@ -34,100 +34,152 @@
 
 ---
 
-## 🏗 System Architecture (Detailed)
+## 🏗 System Architecture (Deep Dive)
 
-This diagram represents the complete data flow of the Helio platform, including Authentication, Real-time Sync, and External Service Integrations.
+### 1. High-Level System Context
+This diagram illustrates the macro-level interaction between the Client, the Platform Routing Layer, and the Core Services.
 
 ```mermaid
 graph TD
-    %% Subgraph Styling
-    classDef client fill:#e1f5fe,stroke:#01579b,stroke-width:2px;
-    classDef server fill:#f3e5f5,stroke:#4a148c,stroke-width:2px;
-    classDef db fill:#e8f5e9,stroke:#1b5e20,stroke-width:2px;
-    classDef external fill:#fff3e0,stroke:#e65100,stroke-width:2px;
-
-    subgraph Client ["🖥️ Client Application (React 18)"]
-        direction TB
-        UI[Atomic UI Components]
-        AuthUI[Login/Register Forms]
-        
-        subgraph EditorEngine [Code Editor]
-            CM[CodeMirror 5 Instance]
-            YjsClient[Yjs CRDT Provider]
-            SocketClient[Socket.io Client]
-        end
-    end
-
-    subgraph LB ["☁️ Load Balancer / CDN"]
-        RenderLB[Render/Vercel Edge Network]
-    end
-
-    subgraph Server ["⚙️ Backend Server (Node.js + Express)"]
-        direction TB
-        
-        API[REST API Router]
-        SocketSrv[Socket.io Service]
-        
-        subgraph AuthLayer [Security Layer]
-            AuthCtrl[Auth Controller]
-            JWT[JWT Middleware]
-            Bcrypt[Bcrypt Hashing]
-            Rate[Rate Limiter]
-        end
-
-        subgraph Services [Business Logic]
-            RoomSrv[Room Service]
-            ExecSrv["Run Controller (Axios)"]
-        end
-    end
-
-    subgraph Database ["💾 Persistence Layer"]
-        Mongo[("MongoDB Atlas")]
-    end
-
-    subgraph External ["🌍 External APIs"]
-        Brevo[("📧 Brevo (Email/OTP)")]
-        Piston[("⚡ Piston (Code Runner)")]
-    end
-
-    %% Connections
-    UI --> AuthUI
-    UI --> EditorEngine
-
-    %% Network Flow
-    AuthUI --HTTPS--> RenderLB
-    SocketClient --WSS (WebSockets)--> RenderLB
-    RenderLB --> API
-    RenderLB --> SocketSrv
-
-    %% Backend Flow
-    API --> AuthLayer
-    AuthLayer --> AuthCtrl
-    AuthCtrl --> Bcrypt
-    AuthCtrl --> JWT
-    AuthCtrl --Send OTP--> Brevo
-
-    %% Collaboration Flow
-    SocketSrv --Sync Updates--> RoomSrv
-    SocketSrv --Broadcast--> SocketClient
-    RoomSrv --Persist State--> Mongo
+    user((User / Developer))
     
-    %% Auth Persistence
-    AuthCtrl --Store User--> Mongo
+    subgraph Client_Layer ["� Client Layer (React 18)"]
+        Landing[Landing Page\n(Room Generation)]
+        Dashboard[User Dashboard\n(History & Social)]
+        Editor[Editor Engine\n(CodeMirror + Yjs)]
+    end
+    
+    subgraph Platform_Layer ["☁️ Platform / Infrastructure"]
+        LB[Render Load Balancer\n(HTTPS / WSS Termination)]
+        CDN[Vercel Edge Network\n(Static Assets)]
+    end
+    
+    subgraph Server_Layer ["⚙️ Application Server (Node.js)"]
+        API[Express REST API]
+        Socket[Socket.io Service]
+        Auth[Passport Auth Control]
+        Exec[Code Runner Service]
+    end
+    
+    subgraph Data_Layer ["💾 Persistence (MongoDB Atlas)"]
+        Users[(User Collection)]
+        Rooms[(Room Collection)]
+        Chats[(RoomMessage Collection)]
+        Logs[(AuditLog Collection)]
+        Friends[(FriendRequest Collection)]
+    end
+    
+    subgraph External_Services ["🌍 3rd Party APIs"]
+        Google[Google OAuth]
+        Brevo[Brevo Email API]
+        Piston[Piston Code Sandbox]
+    end
 
-    %% Execution Flow
-    EditorEngine --Run Code--> API
-    API --> ExecSrv
-    ExecSrv --POST Source Code--> Piston
-    Piston --Return Output--> ExecSrv
-    ExecSrv --JSON Response--> EditorEngine
-
-    %% Styling Application
-    class UI,AuthUI,EditorEngine client;
-    class API,SocketSrv,AuthLayer,Services server;
-    class Mongo db;
-    class Brevo,Piston external;
+    %% Flows
+    user --> CDN
+    CDN --> Client_Layer
+    Client_Layer --> LB
+    LB --> API
+    LB --> Socket
+    
+    API --> Auth
+    Auth --> Users
+    Auth <--> Google
+    Auth --> Brevo
+    
+    Socket <--> Editor
+    Socket --> Rooms
+    Socket --> Chats
+    
+    Editor --> Exec
+    Exec <--> Piston
+    Exec --> Logs
 ```
+
+### 2. Authentication & Room Lifecycle
+How a user enters the system, authenticates, and how Rooms are lazily created.
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Client
+    participant API
+    participant DB as MongoDB
+    
+    Note over User, Client: Scenario A: Anonymous Guest
+    User->>Client: Clicks "Generate Room"
+    Client->>Client: Generates UUID (v4)
+    Client->>User: Redirects to /editor/:uuid
+    Note right of Client: Room is NOT yet in DB
+    
+    User->>Client: Joins via Socket
+    Client->>API: Socket.emit('JOIN', {roomId})
+    API->>DB: Room.findOne(roomId)
+    DB-->>API: null
+    API->>User: Returns "Ephemeral Session"
+    Note right of DB: Anonymous rooms are transient\nuntil data is saved.
+    
+    Note over User, Client: Scenario B: Logged In User
+    User->>Client: Login (Email/Pass or Google)
+    Client->>API: POST /auth/login
+    API->>DB: Verify Credentials
+    DB-->>API: User Document
+    API-->>Client: JWT Token
+    
+    User->>Client: Creates Room
+    Client->>API: Socket.emit('JOIN', {roomId, userId})
+    API->>DB: Room.create({ owner: userId, members: [userId] })
+    DB-->>API: New Room Doc
+    API->>DB: User.addToSet({ recentRooms: roomId })
+    Note right of DB: Room is now PERSISTED in history.
+```
+
+### 3. Data Persistence & Schema Map
+A breakdown of exactly what is stored in the database.
+
+| Collection | Key Fields | Purpose |
+| :--- | :--- | :--- |
+| **Users** | `username`, `email`, `password` (hash), `friends` (ref), `recentRooms` (ref) | Identity & Social Graph root. |
+| **Rooms** | `roomId`, `files` (array), `whiteboardElements` (array), `owner` (ref) | Stores the code content and canvas state. |
+| **RoomMessages** | `roomId`, `message`, `sender`, `timestamp` | Persists chat history for the room. |
+| **FriendRequests** | `sender`, `receiver`, `status` (PENDING/ACCEPTED) | Manages the social handshake protocol. |
+| **AuditLogs** | `roomId`, `action` ("CODE_RUN"), `codeSnapshot`, `timestamp` | Security compliance; tracks code run events. |
+
+### 4. Real-Time Collaboration Logic (Yjs + Socket.io)
+How 10 users can type at once without conflicts.
+
+```mermaid
+flowchart LR
+    UserA[User A types 'f']
+    UserB[User B types 'u']
+    
+    subgraph ClientA
+        YjsA[Yjs Doc A]
+        VecA[Vector Clock: 1,0]
+    end
+    
+    subgraph ClientB
+        YjsB[Yjs Doc B]
+        VecB[Vector Clock: 0,1]
+    end
+    
+    UserA --> YjsA
+    UserB --> YjsB
+    
+    YjsA --Bin Update--> Server((Socket Server))
+    YjsB --Bin Update--> Server
+    
+    Server --Broadcast--> ClientB
+    Server --Broadcast--> ClientA
+    
+    ClientA --> Merge[Merge Algorithms]
+    ClientB --> Merge
+    
+    Merge --> Result["func"]
+    Note bottom of Merge: Commutative property ensures\nboth clients end up with 'func'
+```
+
+---
 
 ---
 
