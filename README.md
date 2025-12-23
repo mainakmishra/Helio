@@ -176,7 +176,9 @@ flowchart LR
     ClientB --> Merge
     
     Merge --> Result["func"]
-    Note bottom of Merge: Commutative property ensures\nboth clients end up with 'func'
+    
+    Result -.-> Note["Commutative property ensures\nboth clients end up with 'func'"]
+    style Note fill:#fff,stroke:#333,stroke-dasharray: 5 5
 ```
 
 ---
@@ -253,6 +255,3 @@ Custom retry logic is implemented for the Piston API calls. If the sandbox is bu
 
 Open `http://localhost:3000` to start coding!
 
----
-
-*Built with ❤️ by Deepak & Mainak*
