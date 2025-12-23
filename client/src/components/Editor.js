@@ -48,7 +48,6 @@ const getMode = (lang) => {
 
 function Editor({ socketRef, roomId, onCodeChange, initialCode, selectedLanguage, fileId, onEditorMount, isAutocompleteEnabled }) {
   const editorRef = useRef(null);
-  const lspAdapterRef = useRef(null);
 
   // Track autocomplete prop in a Ref to access inside closures without stale state
   const autocompleteRef = useRef(isAutocompleteEnabled);
