@@ -2,6 +2,7 @@
 const express = require("express");
 require("dotenv").config();
 const app = express();
+app.set("trust proxy", 1); // Trust Render's proxy for HTTPS
 const http = require("http");
 const { Server } = require("socket.io");
 const ACTIONS = require("./src/constants/Actions");
