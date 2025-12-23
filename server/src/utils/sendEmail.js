@@ -2,22 +2,20 @@ const nodemailer = require('nodemailer');
 const logger = require('./logger');
 
 const sendEmail = async (options) => {
-    // Create transporter with connection pooling to manage connections more efficiently
+    // Use standardized Gmail service with IPv4 forcing
+    // This resolves issues where IPv6 routing fails in cloud environments (Render)
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
         },
-        pool: true, // Use pooled connections
-        maxConnections: 1, // Limit distinct connections to avoid aggressive blocking
-        rateLimit: 5, // Limit messages per second
-        tls: {
-            rejectUnauthorized: false // Skip strict certificate validation
-        },
-        connectionTimeout: 20000,
-        greetingTimeout: 20000,
-        socketTimeout: 20000
+        family: 4, // Force IPv4
+        logger: true,
+        debug: true,
+        connectionTimeout: 30000,
+        greetingTimeout: 30000,
+        socketTimeout: 30000
     });
 
     const message = {
