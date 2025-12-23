@@ -14,12 +14,30 @@ const breaker = new CircuitBreaker(executeCode, { failureThreshold: 3, resetTime
 router.post("/", async (req, res) => {
     const { code, language, input } = req.body;
 
-    // ... constructs config ...
-    // Using simple mapping for now assuming standard JDoodle
+
+    // Map common language names to JDoodle versions
+    const languageMap = {
+        'javascript': 'nodejs',
+        'typescript': 'typescript',
+        'python': 'python3',
+        'c++': 'cpp',
+        'c': 'c',
+        'java': 'java',
+        'go': 'go',
+        'rust': 'rust',
+        'bash': 'bash'
+    };
+
+    const targetLanguage = languageMap[language] || language;
+
+    if (!process.env.jDoodle_clientId || !process.env.jDoodle_clientSecret) {
+        logger.error('Missing JDoodle credentials in environment');
+        return res.status(500).json({ error: "Server misconfiguration: Missing compiler credentials" });
+    }
 
     const program = {
         script: code,
-        language: language,
+        language: targetLanguage,
         versionIndex: "0",
         clientId: process.env.jDoodle_clientId,
         clientSecret: process.env.jDoodle_clientSecret,
@@ -40,6 +58,9 @@ router.post("/", async (req, res) => {
         logger.error('Error executing code: %s', error.message);
         if (error.message === "Service Unavailable (Circuit Open)") {
             return res.status(503).json({ error: "Service busy, please try again later." });
+        }
+        if (error.response && error.response.status === 429) {
+            return res.status(429).json({ error: "Daily compilation limit exceeded. Please try again tomorrow." });
         }
         res.status(500).json({ error: "Failed to execute code. Check server logs." });
     }
