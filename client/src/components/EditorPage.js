@@ -13,7 +13,7 @@ import { toast } from "react-hot-toast";
 import axios from "axios";
 import Chat from "./Chat";
 import { useAuth } from "../context/AuthContext";
-import { Play, RotateCcw, Copy, LogOut, ChevronDown, ChevronUp, Users, Code, PenTool, PanelLeftOpen, PanelLeftClose, PanelRightOpen, PanelRightClose, Menu, Edit, Folder, FileCode, ChevronRight, FilePlus, Trash2, Plus, X } from 'lucide-react';
+import { Play, RotateCcw, Copy, LogOut, ChevronDown, ChevronUp, Users, Code, PenTool, PanelLeftOpen, PanelLeftClose, PanelRightOpen, PanelRightClose, Menu, Edit, Folder, FileCode, ChevronRight, FilePlus, Trash2, Plus, X, Zap } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import Whiteboard from "./Whiteboard/Board";
 import * as Y from 'yjs';
@@ -721,7 +721,7 @@ const EditorPage = () => {
             }}
             title="Toggle Autocomplete"
           >
-            AI {isAutocompleteEnabled ? 'ON' : 'OFF'}
+            <Zap size={12} fill={isAutocompleteEnabled ? "currentColor" : "none"} /> Auto
           </button>
         </div>
       </div >
