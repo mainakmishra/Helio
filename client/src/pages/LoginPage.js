@@ -78,15 +78,15 @@ const LoginPage = () => {
 
                     <form onSubmit={handleLogin}>
                         <div className="auth-form-group">
-                            <label className="auth-label">Email Address</label>
+                            <label className="auth-label">Email or Username</label>
                             <div className="auth-input-wrapper">
                                 <input
-                                    type="email"
+                                    type="text"
                                     className="auth-input"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    placeholder="name@example.com"
+                                    placeholder="username or email"
                                 />
                             </div>
                         </div>

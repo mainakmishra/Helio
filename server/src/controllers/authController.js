@@ -63,10 +63,14 @@ const crypto = require('crypto');
 
 exports.login = async (req, res) => {
     try {
+        // 'email' here comes from the frontend form field, but it could be a username
         const { email, password } = req.body;
 
-        // Check if user exists
-        const user = await User.findOne({ email });
+        // Check if user exists by Email OR Username
+        const user = await User.findOne({
+            $or: [{ email: email }, { username: email }]
+        });
+
         if (!user) {
             return res.status(400).json({ message: 'Invalid Credentials' });
         }
