@@ -32,7 +32,7 @@ router.get('/google/callback',
                 // We need to know frontend URL. Assuming relative for now or env.
                 // Let's assume dev env for redirect logic or grab from referer?
                 // Better to use env var for CLIENT_URL
-                const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000'; // Default React port
+                const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
                 res.redirect(`${clientUrl}/auth/success?token=${token}`);
             }
         );
