@@ -42,7 +42,10 @@ a {
   color: var(--accent-blue);
 }
 
-button {
+button,
+input,
+textarea,
+select {
   cursor: pointer;
   border: none;
   font-family: var(--font-ui);

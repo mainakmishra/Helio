@@ -21,7 +21,14 @@ function App() {
     <AuthProvider>
       <Layout>
         <div>
-          <Toaster position='top-center'></Toaster>
+          <Toaster position='top-center' toastOptions={{
+            style: {
+              background: '#333',
+              color: '#fff',
+              fontFamily: 'var(--font-ui)',
+              fontSize: '14px',
+            },
+          }}></Toaster>
         </div>
         <Routes>
           {/* Public Routes */}
