@@ -8,6 +8,7 @@ import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import AuthSuccessPage from './pages/AuthSuccessPage';
 import ProfilePage from './pages/ProfilePage';
+import Error500Page from './pages/Error500Page';
 import ChatPage from './pages/ChatPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { Toaster } from 'react-hot-toast';
@@ -31,6 +32,7 @@ function App() {
           <Route path="/auth/success" element={<AuthSuccessPage />} />
           <Route path="/profile/:username" element={<ProfilePage />} />
           <Route path="/editor/:roomId" element={<EditorPage />} />
+          <Route path="/500" element={<Error500Page />} />
 
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
