@@ -291,7 +291,7 @@ const EditorPage = () => {
     };
   }, [socketInitialized, roomId]);
 
-  // 2. Bind CodeMirror to Active File (Switching Tabs)
+  // 2. Bind Monaco to Active File (Switching Tabs)
   useEffect(() => {
     if (!editorInstance || !activeFileId || !providerRef.current || !ydocRef.current) return;
 
