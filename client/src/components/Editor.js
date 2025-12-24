@@ -3,6 +3,7 @@ import Editor, { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
 
 // Configure loader to use the local monaco instance
+import { registerLanguageCompletions } from "../utils/languageCompletion";
 loader.config({ monaco });
 
 const getMonacoLanguage = (lang) => {
@@ -54,6 +55,9 @@ const RealtimeEditor = ({
       scrollBeyondLastLine: false,
       automaticLayout: true,
     });
+
+    // Register Custom Completions (C++/Java)
+    registerLanguageCompletions(monaco);
 
     // Pass editor instance up for YJS binding
     if (onEditorMount) {
